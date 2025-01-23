@@ -1,10 +1,10 @@
 package com.example.school.model.post
 
 data class PostResponse(
-    val lastPage: Boolean?,
-    val pageElement: Int?,
-    val pageNumber: Int?,
-    val pageSize: Int?,
-    val postList: List<Post?>?,
-    val totalPage: Int?
+    val lastPage: Boolean?=null,
+    val pageElement: Int?=null,
+    val pageNumber: Int?=null,
+    val pageSize: Int?=null,
+    val postList: List<Post>?=null,
+    val totalPage: Int?=null
 )

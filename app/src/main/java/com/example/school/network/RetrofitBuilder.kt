@@ -20,7 +20,7 @@ import javax.net.ssl.HostnameVerifier
 class RetrofitBuilder {
 
     // Base URL for the API
-    private val BASE_URL = "http://192.168.68.171:8080/"
+    private val BASE_URL = "http:/192.168.0.103:8080/"
 
     @Singleton
     @Provides

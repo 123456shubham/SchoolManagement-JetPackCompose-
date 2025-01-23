@@ -20,7 +20,7 @@ interface RestService {
     @POST("auth/login")
     suspend fun login(@Body loginRequest: LoginRequest):Response<LoginResponse>
 
-    @POST("api/teacher")
+    @POST("api/teacher/")
     suspend fun addTeacher(@Body addTeacherRequest:AddTeacherRequest):Response<AddTeacherResponse>
 
     @POST("auth/create-student")

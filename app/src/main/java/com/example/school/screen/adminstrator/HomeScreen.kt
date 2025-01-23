@@ -1,5 +1,6 @@
 package com.example.school.screen.adminstrator
 
+import android.annotation.SuppressLint
 import android.widget.Toast
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
@@ -8,13 +9,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
@@ -30,18 +30,15 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.rememberAsyncImagePainter
 import com.example.school.R
 import com.example.school.model.post.Post
-import com.example.school.screen.adminstrator.model.DummyPost
-import com.example.school.screen.adminstrator.model.getAllPost
-import com.example.school.sealed.ApiResponse
+
 import com.example.school.viewModel.HomePageViewModel
-import com.example.school.viewModel.LoginViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -64,50 +61,39 @@ import kotlinx.coroutines.launch
 
 
     val homePageViewModel: HomePageViewModel = hiltViewModel()
-    val loginState = homePageViewModel.postObservable.collectAsState()
+    val homeState by homePageViewModel.postObservable.collectAsState()
+
+// Load initial data
+    LaunchedEffect(Unit) {
+        homePageViewModel.postObserver("0", "10", null, null)
+    }
+
+    var isLoading by remember { mutableStateOf(false) }
 
 
-//    homePageViewModel.postObserver("0","10",null,null)
+    // LazyListState for pagination
+    val listState = rememberLazyListState()
 
-
-    LaunchedEffect(loginState) {
-        when (val state = loginState.value) {
-            is ApiResponse.Loading -> {
-                // Optionally, show a loading indicator
-                Toast.makeText(context, "Loading...", Toast.LENGTH_SHORT).show()
-            }
-            is ApiResponse.Success -> {
-                // Handle success: store token and navigate
-//                Toast.makeText(context, " ${state.data?.message}", Toast.LENGTH_SHORT).show()
-                postList= state.data?.postList as List<Post>?
-//                LazyColumn(modifier = Modifier.fillMaxSize()) {
-//                    itemsIndexed(state.data.postList) { index, item ->
-//                        if (item != null) {
-//                            PostScreen(item)
-//                        }
-//                    }
-//                }
-//                state.data?.postList?.forEach{post->
-//                    if (post != null) {
-//                        post.let {
-//                            PostScreen(it)
-//
-//                        }
-//                    }
-//
-//                }
-
-
-//                navController.navigate("home") {
-//                    popUpTo("login") { inclusive = true }
-//                }
-            }
-            is ApiResponse.Error -> {
-                // Handle error
-                Toast.makeText(context, "Error: ${state.errorMessage}", Toast.LENGTH_SHORT).show()
+    // Pagination trigger when user reaches the bottom
+    LaunchedEffect(listState.firstVisibleItemIndex) {
+        if (!isLoading && listState.layoutInfo.visibleItemsInfo.isNotEmpty()) {
+            val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.last()
+            if (lastVisibleItem.index == postList!!.size - 1) {
+//                loadMorePosts(homePageViewModel, postList.size, 10)
             }
         }
     }
+
+//    LaunchedEffect(homeState) {
+//        when {
+//            homeState?.postList != null -> {
+//                postList = homeState.postList
+//            }
+//            else -> {
+//                Toast.makeText(context, "Failed to load posts or no posts available.", Toast.LENGTH_SHORT).show()
+//            }
+//        }
+//    }
 
 
     // Auto-scroll effect
@@ -124,15 +110,23 @@ import kotlinx.coroutines.launch
             .fillMaxSize()
             .background(color = colorResource(id = R.color.red))
             .padding(top = 80.dp)
+//            .verticalScroll(rememberScrollState())
+
     ) {
 
         Column(modifier = Modifier
             .clip(RoundedCornerShape(topStart = 50.dp, topEnd = 50.dp))
             .background(color = colorResource(id = R.color.white))
-            .verticalScroll(rememberScrollState())
+
 
 
         ) {
+//
+//            Row {
+//                Image( Icons.Filled.Add, contentDescription =null )
+//            }
+
+
             // Banner Section
             BannerSection(
                 listOfBanner = listOfBanner,
@@ -141,8 +135,10 @@ import kotlinx.coroutines.launch
             )
 
 ////             Post List Section
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                itemsIndexed(postList ?: emptyList()) { index, item ->
+            LazyColumn(modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 0.dp)) {
+                itemsIndexed(homeState.postList ?: emptyList()) { index, item ->
                     PostScreen(item)
                 }
             }
@@ -160,7 +156,7 @@ fun BannerSection(listOfBanner: List<Int>, pageState: PagerState, scope: Corouti
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .wrapContentSize()
+            .height(150.dp)
             .background(colorResource(id = R.color.white))
             .padding(top = 0.dp)
     ) {
@@ -243,7 +239,7 @@ fun BannerSection(listOfBanner: List<Int>, pageState: PagerState, scope: Corouti
     }
 
     // Centered page indicator
-    pageIndicator(
+    PageIndicator(
         pageCount = listOfBanner.size,
         currentPage = pageState.currentPage
     )
@@ -251,7 +247,7 @@ fun BannerSection(listOfBanner: List<Int>, pageState: PagerState, scope: Corouti
 
 // Page Indicator
 @Composable
-fun pageIndicator(pageCount: Int, currentPage: Int) {
+fun PageIndicator(pageCount: Int, currentPage: Int) {
     Row(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
@@ -280,6 +276,7 @@ fun IndicatorDots(isSelected: Boolean) {
 }
 
 // post
+@SuppressLint("DiscouragedApi")
 @Composable
 fun PostScreen(list: Post) {
     val context = LocalContext.current
@@ -288,11 +285,13 @@ fun PostScreen(list: Post) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
-                Toast.makeText(
-                    context,
-                    "Clicked Item ${list.studentRegister?.name}",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast
+                    .makeText(
+                        context,
+                        "Clicked Item ${list.studentRegister?.name}",
+                        Toast.LENGTH_SHORT
+                    )
+                    .show()
             }
     ) {
         Card(
@@ -310,21 +309,28 @@ fun PostScreen(list: Post) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 10.dp)
+                        .padding(top = 10.dp, start = 10.dp)
                 ) {
-                    // Profile Image
-                    val profileImageResId = list.studentRegister?.img?.let {
-                        context.resources.getIdentifier(it, "drawable", context.packageName)
-                    } ?: R.drawable.ic_launcher_background // Default fallback
+//                    val profileImageUrl = list.studentRegister?.img // This is your URL string, e.g., "https://example.com/image.png"
+                    val profileImageUrl = "https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0"
 
                     Image(
-                        painter = painterResource(id = profileImageResId),
+                        painter = rememberAsyncImagePainter(
+                            model = profileImageUrl,
+                            placeholder = painterResource(R.drawable.ic_launcher_background), // Placeholder while loading
+                            error = painterResource(R.drawable.ic_launcher_background) // Fallback on error
+                        ),
                         contentDescription = null,
                         modifier = Modifier
-                            .height(50.dp)
-                            .width(50.dp)
-                            .padding(start = 10.dp)
-                            .align(Alignment.CenterVertically)
+
+                            .clip(CircleShape)
+                            .size(40.dp)
+//                            .height(50.dp)
+//                            .width(50.dp)
+                            .padding(start = 0.dp)
+                            .align(Alignment.CenterVertically),
+                        contentScale = ContentScale.Crop // Crop the image to fit the circle perfectly
+
                     )
 
                     // Post Details
@@ -365,8 +371,14 @@ fun PostScreen(list: Post) {
                     context.resources.getIdentifier(it, "drawable", context.packageName)
                 } ?: R.drawable.banner // Default fallback
 
+                val profileImageUrl = "https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0"
+
                 Image(
-                    painter = painterResource(id = postImageResId),
+                    painter = rememberAsyncImagePainter(
+                        model = profileImageUrl,
+                        placeholder = painterResource(R.drawable.ic_launcher_background), // Placeholder while loading
+                        error = painterResource(R.drawable.ic_launcher_background) // Fallback on error
+                    ),
                     contentDescription = null,
                     modifier = Modifier
                         .fillMaxWidth()

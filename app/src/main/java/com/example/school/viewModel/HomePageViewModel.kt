@@ -10,10 +10,15 @@ import javax.inject.Inject
 @HiltViewModel
 class HomePageViewModel @Inject constructor(private val homePageRepository: HomePageRepository):ViewModel(){
 
-    val postObservable=homePageRepository.post
-    suspend fun postObserver(pageNumber: String,pageSize:String,sortByASC:String?,sortByDESC: String?){
+
+        val postObservable=homePageRepository.post
+
+     fun postObserver(pageNumber: String,pageSize:String,sortByASC:String?,sortByDESC: String?){
         viewModelScope.launch {
-            homePageRepository.postApi(pageNumber,pageSize,sortByASC,sortByDESC)
+
+                    homePageRepository.postAPI(pageNumber,pageSize,sortByASC,sortByDESC)
+
+
         }
     }
 

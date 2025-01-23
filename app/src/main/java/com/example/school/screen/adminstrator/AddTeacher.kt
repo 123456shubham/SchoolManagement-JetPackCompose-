@@ -68,28 +68,28 @@ fun AddTeacher() {
     val staffState by staffViewModel.addTeacherObservable.collectAsState(initial = null)
 
 
-    LaunchedEffect(staffState) {
-        when(val state=staffState){
-            is ApiResponse.Success->{
-
-                Toast.makeText(
-                    context,
-                    " ${state.data?.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-            is ApiResponse.Error -> {Toast.makeText(
-                context,
-                " ${state.errorMessage}",
-                Toast.LENGTH_SHORT
-            ).show()}
-            is ApiResponse.Loading -> {}
-            null -> {
-
-            }
-        }
-
-    }
+//    LaunchedEffect(staffState) {
+//        when(val state=staffState){
+//            is ApiResponse.Success->{
+//
+//                Toast.makeText(
+//                    context,
+//                    " ${state.data?.message}",
+//                    Toast.LENGTH_SHORT
+//                ).show()
+//            }
+//            is ApiResponse.Error -> {Toast.makeText(
+//                context,
+//                " ${state.errorMessage}",
+//                Toast.LENGTH_SHORT
+//            ).show()}
+//            is ApiResponse.Loading -> {}
+//            null -> {
+//
+//            }
+//        }
+//
+//    }
     Box(
         modifier = Modifier
             .verticalScroll(rememberScrollState())

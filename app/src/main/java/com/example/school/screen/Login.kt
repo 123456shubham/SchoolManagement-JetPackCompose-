@@ -94,86 +94,99 @@ fun Login(navController: NavController,loginManager: LoginManager) {
 
     var context= LocalContext.current
 
-//    val loginViewModel : LoginViewModel= viewModel()
-    // Obtain the ViewModel using Hilt
-//    val loginViewModel: LoginViewModel = hiltViewModel()
-//    val loginState by loginViewModel.loginObservable.collectAsState(initial = null)
-// Getting the viewModel using hiltViewModel()
     val loginViewModel: LoginViewModel = hiltViewModel()
-    // Collecting the login state from the ViewModel
-    val loginState = loginViewModel.loginObservable.collectAsState()
-
-
-
-
+    val loginState by loginViewModel.loginObservable.collectAsState()
 
 // Assuming loginState is of type LoginState (as we discussed earlier)
+
+    LaunchedEffect(loginState) {
+        when {
+            loginState.success == true -> {
+                // Login successful
+                Toast.makeText(
+                    context,
+                    "Login successful: ${loginState.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                // Store the token using your loginManager
+                loginManager.setToken(loginState.token ?: "")
+
+                // Navigate to the home screen
+                navController.navigate("home") {
+                    // Clear the back stack to prevent returning to the login screen
+                    popUpTo("login") { inclusive = true }
+                }
+            }
+            loginState.success == false -> {
+                // Login failed
+                Toast.makeText(
+                    context,
+                    "Login failed: ${loginState.message ?: "Unknown error"}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+            else -> {
+                // Handle unexpected or null cases
+                Toast.makeText(
+                    context,
+                    "Unexpected state encountered.",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
 //    LaunchedEffect(loginState) {
 //        when (val state = loginState) {
-//            is ApiResponse.Loading -> {
-//                // Optionally, show a loading indicator (e.g., a ProgressBar)
-//                // You could trigger a ProgressBar or loading spinner here.
-//            }
-//            is ApiResponse.Success -> {
-//                // Show success toast message
-//                Toast.makeText(
-//                    context,
-//                    " ${state.data?.message}",
-//                    Toast.LENGTH_SHORT
-//                ).show()
 //
-//                // Store the token using your loginManager
-//                loginManager.setToken(state.data?.token.toString())
 //
-//                // Navigate to home screen
-//                navController.navigate("home") {
-//                    // Clear the back stack so the user cannot return to the login screen
-//                    popUpTo("login") { inclusive = true }
-//                }
-//            }
-//            is ApiResponse.Error -> {
-//                // Show error toast or alert message
+//            if (state.success==true){
 //
-//                Toast.makeText(
-//                    context,
-//                    "Error: ${state.errorMessage}",
-//                    Toast.LENGTH_SHORT
-//                ).show()
-//            }
+//            }else{
 //
-//            else -> {
-//                // Optionally handle any unexpected state or 'null' cases here
-//                // This will catch any unexpected state (such as if loginState is null)
 //            }
+////            is ApiResponse.Loading -> {
+////                // Optionally, show a loading indicator (e.g., a ProgressBar)
+////                // You could trigger a ProgressBar or loading spinner here.
+////            }
+////            is ApiResponse.Success -> {
+////                // Show success toast message
+////                Toast.makeText(
+////                    context,
+////                    " ${state.data?.message}",
+////                    Toast.LENGTH_SHORT
+////                ).show()
+////
+////                // Store the token using your loginManager
+////                loginManager.setToken(state.data?.token.toString())
+////
+////                // Navigate to home screen
+////                navController.navigate("home") {
+////                    // Clear the back stack so the user cannot return to the login screen
+////                    popUpTo("login") { inclusive = true }
+////                }
+////            }
+////            is ApiResponse.Error -> {
+////                // Show error toast or alert message
+////
+////                Toast.makeText(
+////                    context,
+////                    "Error: ${state.errorMessage}",
+////                    Toast.LENGTH_SHORT
+////                ).show()
+////            }
+////
+////            else -> {
+////                // Optionally handle any unexpected state or 'null' cases here
+////                // This will catch any unexpected state (such as if loginState is null)
+////            }
 //        }
 //    }
 
 
-    // Observe the login state and handle it
-    LaunchedEffect(loginState.value) {
-        when (val state = loginState.value) {
 
-            is ApiResponse.Success -> {
-                // Handle success: store token and navigate
-                Toast.makeText(navController.context, "Login Success: ${state.data?.message}", Toast.LENGTH_SHORT).show()
-                loginManager.setToken(state.data?.token.toString())
 
-                // Store token securely
-                navController.navigate("home") {
-                    popUpTo("login") { inclusive = true }
-                }
-            }
-            is ApiResponse.Error -> {
-                // Handle error
-                Toast.makeText(navController.context, "Error: ${state.errorMessage}", Toast.LENGTH_SHORT).show()
-            }
-
-            is ApiResponse.Loading -> {
-                // Optionally, show a loading indicator
-                Toast.makeText(navController.context, "Loading...", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
 
 
     Box(

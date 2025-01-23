@@ -22,14 +22,19 @@ fun SplashScreen(navController: NavController,loginManager: LoginManager){
 
 
     LaunchedEffect(Unit) {
-        delay(3000) // 3-second delay
-        if (loginManager.getToken().isNullOrEmpty()) {
+        delay(3000) // 3-second delay for the splash screen
+
+        val token = loginManager.getToken()
+
+        if (token.isNullOrEmpty()) {
+            // Navigate to login screen if the token is null or empty
             navController.navigate("login") {
-                popUpTo("splash") { inclusive = true }
+                popUpTo("splash") { inclusive = true } // Clear splash screen from back stack
             }
         } else {
+            // Navigate to home screen if the token exists
             navController.navigate("home") {
-                popUpTo("splash") { inclusive = true }
+                popUpTo("splash") { inclusive = true } // Clear splash screen from back stack
             }
         }
     }
